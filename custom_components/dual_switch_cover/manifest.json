@@ -2,11 +2,12 @@
   "domain": "dual_switch_cover",
   "name": "Dual Switch Cover",
   "config_flow": true,
-  "documentation": "https://github.com/your_github_username/ha-dual-switch-cover",
+  "documentation": "https://github.com/tempod/switch-to-cover-home-assistant",
   "iot_class": "local_push",
-  "issue_tracker": "https://github.com/your_github_username/ha-dual-switch-cover/issues",
+  "issue_tracker": "https://github.com/tempod/switch-to-cover-home-assistant/issues",
   "version": "1.0.0",
-  "codeowners": ["@your_github_username"],
+  "codeowners": ["@tempod"],
   "requirements": [],
   "dependencies": ["input_boolean", "switch"]
+
 }
