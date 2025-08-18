@@ -9,10 +9,12 @@ PLATFORMS = ["cover"]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Dual Switch Cover from a config entry."""
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    # Questa è la riga corretta per le versioni recenti di Home Assistant
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    # Anche la funzione di unload è stata aggiornata
+    return await hass.config_entries.async_forward_entry_unload(entry, PLATFORMS)
