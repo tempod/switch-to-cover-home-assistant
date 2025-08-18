@@ -1,6 +1,7 @@
 """Platform for cover integration."""
 import asyncio
 from typing import Any
+from datetime import timedelta
 
 from homeassistant.components.cover import (
     CoverDeviceClass,
@@ -12,7 +13,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_ON, STATE_OFF
 from homeassistant.core import HomeAssistant, callback, State
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_call_later, async_track_state_change_event
+from homeassistant.helpers.event import (
+    async_call_later,
+    async_track_state_change_event,
+    async_track_time_interval,
+)
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -70,12 +75,10 @@ class DualSwitchCover(CoverEntity):
         self._last_update_time = dt_util.utcnow()
         
         self._cancel_timer = None
+        self._update_unsub = None # Per il timer di aggiornamento periodico
 
-    # ## MODIFICA: Aggiornata la logica per gestire sia ON che OFF ##
     @callback
-    def _async_switch_state_changed(
-        self, event
-    ) -> None:
+    def _async_switch_state_changed(self, event) -> None:
         """Handle switch state changes."""
         new_state = event.data.get("new_state")
         entity_id = event.data.get("entity_id")
@@ -83,7 +86,6 @@ class DualSwitchCover(CoverEntity):
         if new_state is None:
             return
 
-        # --- Logica per quando lo switch si ACCENDE ---
         if new_state.state == STATE_ON:
             if (entity_id == self._open_switch_entity_id and self._attr_is_opening) or \
                (entity_id == self._close_switch_entity_id and self._attr_is_closing):
@@ -94,11 +96,9 @@ class DualSwitchCover(CoverEntity):
             elif entity_id == self._close_switch_entity_id:
                 self.hass.async_create_task(self.async_close_cover())
 
-        # --- Logica per quando lo switch si SPEGNE ---
         elif new_state.state == STATE_OFF:
             if (entity_id == self._open_switch_entity_id and self._attr_is_opening) or \
                (entity_id == self._close_switch_entity_id and self._attr_is_closing):
-                # Se lo switch corrispondente al movimento attuale si spegne, ferma la tenda.
                 self.hass.async_create_task(self.async_stop_cover())
 
     async def async_added_to_hass(self) -> None:
@@ -111,8 +111,7 @@ class DualSwitchCover(CoverEntity):
                 self._async_switch_state_changed,
             )
         )
-    # ## FINE MODIFICA ##
-
+    
     @property
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
@@ -143,11 +142,16 @@ class DualSwitchCover(CoverEntity):
             domain, service, {"entity_id": entity_id}, blocking=False
         )
 
+    # ## MODIFICA: Aggiunto un callback per forzare l'aggiornamento ##
+    @callback
+    def _async_update_position_callback(self, now=None) -> None:
+        """Callback to force a position update in the UI."""
+        self.async_write_ha_state()
+
     async def _start_movement(self, direction: str, duration: float):
         """Handle the start of a movement."""
-        if self._cancel_timer:
-            self._cancel_timer()
-            self._cancel_timer = None
+        await self.async_stop_cover() # Ferma qualsiasi movimento precedente
+
         self._current_position = self.current_cover_position
 
         self._attr_is_opening = (direction == "open")
@@ -167,10 +171,20 @@ class DualSwitchCover(CoverEntity):
         self._cancel_timer = async_call_later(
             self.hass, duration, self._async_movement_finished
         )
+        # ## MODIFICA: Avvia il timer di aggiornamento periodico ##
+        self._update_unsub = async_track_time_interval(
+            self.hass, self._async_update_position_callback, timedelta(seconds=1)
+        )
+
 
     @callback
     def _async_movement_finished(self, *args) -> None:
         """Callback when movement is finished."""
+        # ## MODIFICA: Ferma il timer di aggiornamento periodico ##
+        if self._update_unsub:
+            self._update_unsub()
+            self._update_unsub = None
+        
         async def finish_movement():
             active_switch = self._open_switch_entity_id if self._attr_is_opening else self._close_switch_entity_id
             
@@ -191,7 +205,7 @@ class DualSwitchCover(CoverEntity):
         self._target_position = 100
         current_pos = self.current_cover_position
         travel_time = self._opening_time * (100 - current_pos) / 100
-        if travel_time > 0:
+        if travel_time > 0.1:
             await self._start_movement("open", travel_time)
 
     async def async_close_cover(self, **kwargs: Any) -> None:
@@ -200,33 +214,43 @@ class DualSwitchCover(CoverEntity):
         self._target_position = 0
         current_pos = self.current_cover_position
         travel_time = self._closing_time * current_pos / 100
-        if travel_time > 0:
+        if travel_time > 0.1:
             await self._start_movement("close", travel_time)
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         target_position = kwargs[ATTR_POSITION]
         current_position = self.current_cover_position
+        
+        travel_time = 0
+        direction = ""
 
         if target_position > current_position:
+            direction = "open"
             self._target_position = target_position
             travel_percentage = (target_position - current_position) / 100.0
             travel_time = self._opening_time * travel_percentage
-            await self._start_movement("open", travel_time)
         elif target_position < current_position:
+            direction = "close"
             self._target_position = target_position
             travel_percentage = (current_position - target_position) / 100.0
             travel_time = self._closing_time * travel_percentage
-            await self._start_movement("close", travel_time)
+        
+        if travel_time > 0.1:
+            await self._start_movement(direction, travel_time)
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         if not self._attr_is_opening and not self._attr_is_closing:
             return
             
+        # ## MODIFICA: Ferma tutti i timer ##
         if self._cancel_timer:
             self._cancel_timer()
             self._cancel_timer = None
+        if self._update_unsub:
+            self._update_unsub()
+            self._update_unsub = None
 
         self._current_position = self.current_cover_position
         
