@@ -1,1 +1,21 @@
-
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configura la Tenda a Doppio Interruttore",
+        "description": "Seleziona le entità e i tempi per la tua tenda.",
+        "data": {
+          "name": "Nome",
+          "open_switch_entity_id": "Entità per Aprire (Switch o Input Boolean)",
+          "close_switch_entity_id": "Entità per Chiudere (Switch o Input Boolean)",
+          "opening_time": "Tempo di apertura completa (secondi)",
+          "closing_time": "Tempo di chiusura completa (secondi)",
+          "delay_start": "Ritardo in partenza (secondi)",
+          "delay_stop": "Ritardo in arresto (secondi)"
+        }
+      }
+    },
+    "error": {},
+    "abort": {}
+  }
+}
