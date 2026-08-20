@@ -2,20 +2,63 @@
   "config": {
     "step": {
       "user": {
-        "title": "Configura la Tenda a Doppio Interruttore",
-        "description": "Seleziona le entità e i tempi per la tua tenda.",
+        "title": "Configura la tenda a doppio interruttore",
+        "description": "Seleziona le due entità che comandano il motore e i tempi di corsa.",
         "data": {
           "name": "Nome",
-          "open_switch_entity_id": "Entità per Aprire (Switch o Input Boolean)",
-          "close_switch_entity_id": "Entità per Chiudere (Switch o Input Boolean)",
+          "open_switch_entity_id": "Entità per aprire (switch o input_boolean)",
+          "close_switch_entity_id": "Entità per chiudere (switch o input_boolean)",
           "opening_time": "Tempo di apertura completa (secondi)",
           "closing_time": "Tempo di chiusura completa (secondi)",
           "delay_start": "Ritardo in partenza (secondi)",
-          "delay_stop": "Ritardo in arresto (secondi)"
+          "delay_stop": "Ritardo in arresto (secondi)",
+          "device_class": "Tipo di cover",
+          "full_travel_on_limits": "Corsa piena in apertura/chiusura totale"
+        },
+        "data_description": {
+          "delay_start": "Pausa tra lo spegnimento del relè opposto e l'accensione di quello attivo.",
+          "full_travel_on_limits": "Fa girare il motore fino al fine corsa, così la posizione stimata si ri-sincronizza. Disattivalo se il motore non ha fine corsa."
         }
       }
     },
-    "error": {},
-    "abort": {}
+    "error": {
+      "same_entity": "Le entità di apertura e chiusura devono essere diverse."
+    },
+    "abort": {
+      "already_configured": "Esiste già una cover configurata su questa coppia di interruttori."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Opzioni Dual Switch Cover",
+        "description": "Le modifiche vengono applicate subito, senza riavviare Home Assistant.",
+        "data": {
+          "name": "Nome",
+          "opening_time": "Tempo di apertura completa (secondi)",
+          "closing_time": "Tempo di chiusura completa (secondi)",
+          "delay_start": "Ritardo in partenza (secondi)",
+          "delay_stop": "Ritardo in arresto (secondi)",
+          "device_class": "Tipo di cover",
+          "full_travel_on_limits": "Corsa piena in apertura/chiusura totale"
+        }
+      }
+    }
+  },
+  "selector": {
+    "device_class": {
+      "options": {
+        "shutter": "Tapparella",
+        "blind": "Veneziana",
+        "curtain": "Tenda",
+        "awning": "Tenda da sole",
+        "shade": "Oscurante",
+        "window": "Finestra",
+        "garage": "Porta garage",
+        "gate": "Cancello",
+        "damper": "Serranda",
+        "door": "Porta"
+      }
+    }
   }
 }

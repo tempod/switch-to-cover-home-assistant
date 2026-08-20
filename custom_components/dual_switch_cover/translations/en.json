@@ -1,0 +1,64 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Dual Switch Cover",
+        "description": "Select the two switches that drive the motor and the travel times.",
+        "data": {
+          "name": "Name",
+          "open_switch_entity_id": "Switch used to open",
+          "close_switch_entity_id": "Switch used to close",
+          "opening_time": "Full opening time (seconds)",
+          "closing_time": "Full closing time (seconds)",
+          "delay_start": "Delay before starting (seconds)",
+          "delay_stop": "Delay before releasing the relay (seconds)",
+          "device_class": "Cover type",
+          "full_travel_on_limits": "Run the full travel time when opening or closing completely"
+        },
+        "data_description": {
+          "delay_start": "Pause between switching off the opposite relay and energising the active one.",
+          "full_travel_on_limits": "Keeps the motor running until the end stop so the estimated position is re-synchronised. Disable it if your motor has no end stops."
+        }
+      }
+    },
+    "error": {
+      "same_entity": "The opening and closing switches must be two different entities."
+    },
+    "abort": {
+      "already_configured": "A cover already exists for this pair of switches."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Dual Switch Cover options",
+        "description": "Changes are applied immediately, without restarting Home Assistant.",
+        "data": {
+          "name": "Name",
+          "opening_time": "Full opening time (seconds)",
+          "closing_time": "Full closing time (seconds)",
+          "delay_start": "Delay before starting (seconds)",
+          "delay_stop": "Delay before releasing the relay (seconds)",
+          "device_class": "Cover type",
+          "full_travel_on_limits": "Run the full travel time when opening or closing completely"
+        }
+      }
+    }
+  },
+  "selector": {
+    "device_class": {
+      "options": {
+        "shutter": "Roller shutter",
+        "blind": "Blind",
+        "curtain": "Curtain",
+        "awning": "Awning",
+        "shade": "Shade",
+        "window": "Window",
+        "garage": "Garage door",
+        "gate": "Gate",
+        "damper": "Damper",
+        "door": "Door"
+      }
+    }
+  }
+}
